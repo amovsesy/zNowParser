@@ -1,0 +1,15 @@
+SELECT XMLQUERY('$x/a/b[$x/a/$x/a/b="1"]' PASSING X1 as "x") FROM MYXMLT!
+
+SELECT XMLQUERY('/movies/movie[title = $t/movies/movie/title] /directedBy/director' PASSING XMLCOL1, XMLCOL2 AS "t" ) FROM ADMF001.TB_XMLMOD14_01 WHERE ID = 1!
+
+SELECT XMLQUERY( '/movies/movie[./title = $t/movies/movie/title] /directedBy/director' PASSING XMLCOL1, XMLCOL2 AS "t" ) FROM ADMF001.TB_XMLMOD14_01 WHERE ID = 1!
+
+ SELECT XMLSERIALIZE( XMLQUERY('fn:replace(/a, ".+","123456789")' PASSING XMLPARSE(DOCUMENT '<a>abcd</a>')) AS CLOB(20)) FROM SYSIBM.SYSDUMMYU!
+
+SELECT XMLQUERY ('fn:replace("&#x59;&#x6F;&#x75;&#x20;&#x66;&#x69;&#x6E; &#x64;&#x20;&#x6D;&#x65;&#x3F;&#x9;&#x59;&#x6F;&#x75;&#x27;&#x72;&#x65; &#x20;&#x73;&#x6F;&#x20;&#x67;&#x72;&#x65;&#x61;&#x74;&#x21;", "[A-z]", "#")' PASSING XMLPARSE(DOCUMENT '<a>abcd</a>')) FROM SYSIBM.SYSDUMMYU!
+
+SELECT XMLQUERY('fn:count(fn:tokenize(/a, "^ab.*ab$","m"))' PASSING XMLPARSE(DOCUMENT '<a>abababab\nababababab\nabababababab\nabababab</a>'))  FROM SYSIBM.SYSDUMMYU!
+
+SELECT XMLQUERY('fn:upper-case("&#x0308;")' PASSING XMLPARSE(DOCUMENT '<a>a1a2a3a4a&#x0308;ab</a>'))  FROM SYSIBM.SYSDUMMYU!
+
+SELECT XMLQUERY('//a/b[fn:matches("abcdef","ab+c?d*ef")]' PASSING XMLPARSE(DOCUMENT '<a><b>3</b><c>4</c></a>') ) FROM SYSIBM.SYSDUMMY1!

@@ -1,0 +1,409 @@
+%Options la=1,table=c,file-prefix=xpath                                      
+%options nobacktrack                                                            
+                                                                                
+                                                                                
+%Eof                                                                            
+    EOF_SYMBOL                                                                  
+%Names                                                                          
+    TOK_SLASH ::= /                                                             
+    TOK_2SLASH ::= //                                                           
+    TOK_AT ::= @                                                                
+    TOK_DOT ::= .                                                               
+    TOK_2DOT ::= ..                                                             
+    TOK_2COLON ::= ::                                                           
+    TOK_STAR ::= *                                                              
+    TOK_NCNAME ::= NCName                                                       
+    TOK_LPAREN ::= (                                                            
+    TOK_RPAREN ::= )                                                            
+    TOK_LSQBRK ::= [                                                            
+    TOK_RSQBRK ::= ]                                                            
+    TOK_PLUS ::= +                                                              
+    TOK_MINUS ::= -                                                             
+    TOK_BAR ::= '|'                                                             
+    TOK_EQ ::= =                                                                
+    TOK_NE ::= !=                                                               
+    TOK_LT ::= <                                                                
+    TOK_LE ::= <=                                                               
+    TOK_GT ::= >                                                                
+    TOK_GE ::= >=                                                               
+    TOK_2LT ::= <<                                                              
+    TOK_2GT ::= >>                                                              
+    TOK_NCNAME_COLON_STAR ::= 'NCName:*'                                        
+    TOK_STAR_COLON_NCNAME ::= '*:NCName'                                        
+    TOK_VARNAME ::= '$VarName'                                                  
+    TOK_QNAME ::= QName                                                         
+    TOK_STRINGLITERAL ::= StringLiteral                                         
+    TOK_INTEGERLITERAL ::= IntegerLiteral                                       
+    TOK_DECIMALLITERAL ::= DecimalLiteral                                       
+    TOK_DOUBLELITERAL ::= DoubleLiteral                                         
+    TOK_COMMA ::= ,                                                             
+--    TOK_SEMICOLON ::= ;                                                         
+    %EMPTY ::= EMPTY                                                            
+%End                                                                            
+%Rules                                                                          
+--* Based on XML recommendation EBNF (namespace incorporated)                   
+--* white space is not preserved, i.e. will be skipped by lexical scanne        
+Goal ::= Prolog Expr                                                            
+                                                                                
+Prolog ::= %EMPTY                                                               
+        | Prolog Prolog1                                                        
+                                                                                
+Prolog1 ::= declare namespace NCName TOK_EQ TOK_STRINGLITERAL TOK_SEMICO        
+        | declare default element namespace TOK_STRINGLITERAL TOK_SEMICO        
+                                                                                
+--*[25] PathExpr ::= ("/" RelativePathExpr?)                                    
+--*	| ("//" RelativePathExpr)                                                   
+--*	| RelativePathExpr                                                          
+-- TOK_SLASH is moved to ExprSingle to remove ambiguity                         
+                                                                                
+PathExpr ::= TOK_SLASH RelativePathExpr                                         
+       | TOK_2SLASH RelativePathExpr                                            
+       | RelativePathExpr                                                       
+                                                                                
+--*[26] RelativePathExpr ::= StepExpr (("/" | "//") StepExpr)*                  
+RelativePathExpr ::= StepExpr                                                   
+       | RelativePathExpr TOK_SLASH StepExpr                                    
+       | RelativePathExpr TOK_2SLASH StepExpr                                   
+                                                                                
+--*[27] StepExpr ::= AxisStep | FilterExpr                                      
+StepExpr ::= AxisStep                                                           
+       | FilterExpr                                                             
+                                                                                
+--*[28] AxisStep ::= (ForwardStep | ReverseStep) PredicateList                  
+AxisStep ::= ForwardStep PredicateList                                          
+       | ReverseStep PredicateList                                              
+                                                                                
+--*[29] ForwardStep ::= (ForwardAxis NodeTest) | AbbrevForwardStep              
+ForwardStep ::= ForwardAxis NodeTest                                            
+       | AbbrevForwardStep                                                      
+                                                                                
+--*[32] ReverseStep ::= (ReverseAxis NodeTest) | AbbrevReverseStep              
+ReverseStep ::= ReverseAxis NodeTest                                            
+       | AbbrevReverseStep                                                      
+                                                                                
+--*[39] PredicateList ::= Predicate*                                            
+PredicateList ::= %EMPTY                                                        
+       | PredicateList Predicate                                                
+                                                                                
+--*[40] Predicate ::= "[" Expr "]"                                              
+Predicate ::= TOK_LSQBRK Expr TOK_RSQBRK                                        
+                                                                                
+--*[31] AbbrevForwardStep ::= "@"? NodeTest                                     
+AbbrevForwardStep ::= TOK_AT NodeTest                                           
+       | NodeTest                                                               
+                                                                                
+--*[34] AbbrevReverseStep ::= ".."                                              
+AbbrevReverseStep ::= TOK_2DOT                                                  
+                                                                                
+--*[30] ForwardAxis ::= ("child" "::")                                          
+--*    | ("descendant" "::")                                                    
+--*    | ("attribute" "::")                                                     
+--*    | ("self" "::")                                                          
+--*    | ("descendant-or-self" "::")                                            
+--*    | ("following-sibling" "::")                                             
+--*    | ("following" "::")                                                     
+--*    | ("namespace" "::")                                                     
+ForwardAxis ::= child TOK_2COLON                                                
+       | descendant TOK_2COLON                                                  
+       | attribute TOK_2COLON                                                   
+       | self TOK_2COLON                                                        
+       | descendant-or-self TOK_2COLON                                          
+                                                                                
+--*[33] ReverseAxis ::= ("parent" "::")                                         
+--*    | ("ancestor" "::")                                                      
+--*    | ("preceding-sibling" "::")                                             
+--*    | ("preceding" "::")                                                     
+--*    | ("ancestor-or-self" "::")                                              
+ReverseAxis ::= parent TOK_2COLON                                               
+                                                                                
+--*[35] NodeTest ::= KindTest | NameTest                                        
+NodeTest ::= KindTest                                                           
+       | NameTest                                                               
+                                                                                
+--*[36] NameTest ::= QName | Wildcard                                           
+NameTest ::= QName                                                              
+       | Wildcard                                                               
+                                                                                
+QName ::=  NCName                                                               
+        | TOK_QNAME                                                             
+                                                                                
+NCName ::= NCName1                                                              
+	| attribute                                                                    
+	| comment                                                                      
+	| document-node                                                                
+	| element                                                                      
+	| empty                                                                        
+	| node                                                                         
+	| processing-instruction                                                       
+	| text                                                                         
+                                                                                
+--*[37] Wildcard ::= "*"                                                        
+--*    | (NCName ":" "*")                                                       
+--*    | <"*" ":" NCName> /* ws: explicit */                                    
+Wildcard ::= TOK_STAR                                                           
+       | TOK_NCNAME_COLON_STAR                                                  
+       | TOK_STAR_COLON_NCNAME                                                  
+                                                                                
+--*[53] KindTest ::= DocumentTest                                               
+--*    | ElementTest                                                            
+--*    | AttributeTest                                                          
+--*    | SchemaElementTest                                                      
+--*    | SchemaAttributeTest                                                    
+--*    | PITest                                                                 
+--*    | CommentTest                                                            
+--*    | TextTest                                                               
+--*    | AnyKindTest                                                            
+KindTest ::= DocumentTest                                                       
+       | ElementTest                                                            
+       | AttributeTest                                                          
+       | PITest                                                                 
+       | CommentTest                                                            
+       | TextTest                                                               
+       | AnyKindTest                                                            
+                                                                                
+--*[63] ElementTest ::= <"element" "(">                                         
+--*       (ElementNameOrWildcard ("," TypeName "?"?)?)? ")"                     
+--*[64] ElementNameOrWildcard ::= ElementName | "*"                             
+--*[68] ElementName ::= QName                                                   
+--*[69] TypeName ::= QName                                                      
+ElementTest ::= element TOK_LPAREN ElementTestArg TOK_RPAREN                    
+ElementTestArg ::= %EMPTY                                                       
+	| QName                                                                        
+	| TOK_STAR                                                                     
+--	| QName TOK_COMMA TypeName_quest                                             
+--	| TOK_STAR TOK_COMMA TypeName_quest                                          
+--TypeName_quest ::= QName                                                      
+--	| QName TOK_QUEST                                                            
+                                                                                
+--*[59] AttributeTest ::= "attribute" "(" (AttribNameOrWildcard ("," Typ        
+--*[60] AttribNameOrWildcard ::= AttributeName | "*"                            
+--*[67] AttributeName ::= QName                                                 
+AttributeTest ::= attribute TOK_LPAREN AttrTestArg TOK_RPAREN                   
+AttrTestArg ::= %EMPTY                                                          
+	| QName                                                                        
+	| TOK_STAR                                                                     
+--	| QName TOK_COMMA TypeName                                                   
+--	| TOK_STAR TOK_COMMA TypeName                                                
+--TypeName ::= QName                                                            
+                                                                                
+--*[58] PITest ::= "processing-instruction" "(" (NCName | StringLiteral)        
+PITest ::= processing-instruction TOK_LPAREN PITestArg TOK_RPAREN               
+PITestArg ::= %EMPTY                                                            
+       | NCName                                                                 
+       | TOK_STRINGLITERAL                                                      
+                                                                                
+--*[55] DocumentTest ::= <"document-node" "(">                                  
+--*       (ElementTest | SchemaElementTest)? ")"                                
+DocumentTest ::= document-node TOK_LPAREN  DocumentTestArg TOK_RPAREN           
+DocumentTestArg ::= %EMPTY                                                      
+       | ElementTest                                                            
+                                                                                
+--*[57] CommentTest ::= <"comment" "("> ")"                                     
+CommentTest ::= comment TOK_LPAREN  TOK_RPAREN                                  
+                                                                                
+--*[56] TextTest ::= <"text" "("> ")"                                           
+TextTest ::= text TOK_LPAREN  TOK_RPAREN                                        
+                                                                                
+--*[54] AnyKindTest ::= "node" "(" ")"                                          
+AnyKindTest ::= node TOK_LPAREN  TOK_RPAREN                                     
+                                                                                
+--*[2] Expr ::= ExprSingle ("," ExprSingle)*                                    
+Expr ::= ExprSingle                                                             
+	| Expr TOK_COMMA ExprSingle                                                    
+                                                                                
+--*[3] ExprSingle ::= ForExpr                                                   
+--*    | QuantifiedExpr                                                         
+--*    | IfExpr                                                                 
+--*    | OrExpr                                                                 
+ExprSingle ::= OrExpr                                                           
+	| TOK_SLASH                                                                    
+                                                                                
+--*[22] OrExpr ::= AndExpr ( "or" AndExpr )*                                    
+OrExpr ::= AndExpr                                                              
+       | OrExpr or AndExpr                                                      
+                                                                                
+--*[9] AndExpr ::= ComparisonExpr ( "and" ComparisonExpr )*                     
+AndExpr ::= ComparisonExpr                                                      
+       | AndExpr and ComparisonExpr                                             
+                                                                                
+--*[10] ComparisonExpr ::= RangeExpr ( (ValueComp                               
+--*    | GeneralComp                                                            
+--*    | NodeComp) RangeExpr )?                                                 
+ComparisonExpr ::= RangeExpr                                                    
+       | RangeExpr Comparison RangeExpr                                         
+Comparison ::= ValueComp                                                        
+       | GeneralComp                                                            
+       | NodeComp                                                               
+                                                                                
+--*[11] RangeExpr ::= AdditiveExpr ( "to" AdditiveExpr )?                       
+RangeExpr ::= AdditiveExpr                                                      
+       | AdditiveExpr to AdditiveExpr                                           
+                                                                                
+--*[12] AdditiveExpr ::= MultiplicativeExpr ( ("+" | "-") Multiplicative        
+AdditiveExpr  ::=  MultiplicativeExpr                                           
+       | AdditiveExpr AdditiveOp MultiplicativeExpr                             
+AdditiveOp ::= TOK_PLUS                                                         
+       | TOK_MINUS                                                              
+                                                                                
+--*[13] MultiplicativeExpr ::= UnionExpr ( ("*" | "div" | "idiv" | "mod"        
+MultiplicativeExpr ::= UnionExpr                                                
+	| MultiplicativeExpr MultiOp UnionExpr                                         
+                                                                                
+MultiOp ::= TOK_STAR                                                            
+       | div                                                                    
+       | idiv                                                                   
+       | mod                                                                    
+                                                                                
+--*[14] UnionExpr ::= IntersectExceptExpr ( ("union" | "|") IntersectExc        
+UnionExpr ::= IntersectExceptExpr                                               
+	| UnionExpr UnionOp IntersectExceptExpr                                        
+UnionOp ::= union                                                               
+       | TOK_BAR                                                                
+                                                                                
+--*[15] IntersectExceptExpr ::= InstanceofExpr ( ("intersect" | "except"        
+--IntersectExceptExpr ::= InstanceofExpr  -- comment: for future use, fo        
+--	| IntersectExceptExpr InterceptOp InstanceofExpr                             
+--InterceptOp ::= intersect                                                     
+--       | except                                                               
+IntersectExceptExpr ::= UnaryExpr                                               
+                                                                                
+--*[16] InstanceofExpr ::= TreatExpr ( "instance" "of" SequenceType )?          
+--InstanceofExpr ::= TreatExpr                                                  
+--	| TreatExpr instance of SequenceType                                         
+                                                                                
+--*[17] TreatExpr ::= CastableExpr ( "treat" "as" SequenceType )?               
+--TreatExpr ::= CastableExpr                                                    
+--	| CastableExpr treat as SequenceType                                         
+                                                                                
+--*[18] CastableExpr ::= CastExpr ( "castable" "as" SingleType )?               
+--CastableExpr ::= CastExpr                                                     
+--	| CastExpr castable as SingleType                                            
+                                                                                
+--*[19] CastExpr ::= UnaryExpr ( <"cast" "as"> SingleType )?                    
+--CastExpr ::= UnaryExpr                                                        
+--	|  UnaryExpr cast as SingleType                                              
+                                                                                
+--*[49] SequenceType ::= (ItemType OccurrenceIndicator?)                        
+--*    | ("empty" "(" ")")                                                      
+--SequenceType ::= ItemType                                                     
+--       | ItemType OccurrenceIndicator                                         
+--       | empty TOK_LPAREN  TOK_RPAREN                                         
+                                                                                
+--*[51] ItemType ::= AtomicType | KindTest | ("item" "(" ")")                   
+--ItemType ::= AtomicType                                                       
+--       | KindTest                                                             
+--       | item TOK_LPAREN  TOK_RPAREN                                          
+                                                                                
+--*[50] OccurrenceIndicator ::= "?" | "*" | "+"                                 
+--OccurrenceIndicator ::= TOK_QUEST                                             
+--       | TOK_STAR                                                             
+--       | TOK_PLUS                                                             
+                                                                                
+--*[52] AtomicType ::= QName                                                    
+--AtomicType ::= QName                                                          
+                                                                                
+--*[48]SingleType ::= AtomicType "?"?                                           
+--SingleType ::= AtomicType                                                     
+--       | AtomicType TOK_QUEST                                                 
+                                                                                
+--*[20] UnaryExpr ::= ("-" | "+")* ValueExpr                                    
+UnaryExpr ::= ValueExpr                                                         
+	| UnaryOp ValueExpr                                                            
+UnaryOp ::= TOK_PLUS                                                            
+	| TOK_MINUS                                                                    
+	| UnaryOp  TOK_PLUS                                                            
+	| UnaryOp  TOK_MINUS                                                           
+                                                                                
+--*[21] ValueExpr ::= PathExpr                                                  
+ValueExpr ::= PathExpr                                                          
+                                                                                
+--*[22] GeneralComp ::= "=" | "!=" | "<" | "<=" | ">" | ">="                    
+GeneralComp ::= TOK_EQ                                                          
+       | TOK_NE                                                                 
+       | TOK_LT                                                                 
+       | TOK_LE                                                                 
+       | TOK_GT                                                                 
+       | TOK_GE                                                                 
+                                                                                
+--*[23] ValueComp ::= "eq" | "ne" | "lt" | "le" | "gt" | "ge"                   
+ValueComp ::= eq                                                                
+       | ne                                                                     
+       | lt                                                                     
+       | le                                                                     
+       | gt                                                                     
+       | ge                                                                     
+                                                                                
+--*[24] NodeComp ::= "is" | "<<" | ">>"                                         
+NodeComp ::= is                                                                 
+       | TOK_2LT                                                                
+       | TOK_2GT                                                                
+                                                                                
+--*[38] FilterExpr ::= PrimaryExpr PredicateList                                
+FilterExpr ::= PrimaryExpr PredicateList                                        
+                                                                                
+--[46] ContextItemExpr ::= "."                                                  
+ContextItemExpr ::= TOK_DOT                                                     
+                                                                                
+--*[41] PrimaryExpr ::= Literal | VarRef | ParenthesizedExpr                    
+--*    | ContextItemExpr | FunctionCall                                         
+--*[44] VarRef ::= "$" VarName                                                  
+--*[74] VarName ::= QName                                                       
+                                                                                
+PrimaryExpr ::= Literal                                                         
+       | TOK_VARNAME                                                            
+       | ParenthesizedExpr                                                      
+       | ContextItemExpr                                                        
+       | FunctionCall                                                           
+-- VarName ::= QName                                                            
+                                                                                
+--*[42] Literal ::= NumericLiteral | StringLiteral                              
+Literal ::= NumericLiteral                                                      
+       | TOK_STRINGLITERAL                                                      
+                                                                                
+--*[43] NumericLiteral ::= IntegerLiteral | DecimalLiteral | DoubleLiter        
+NumericLiteral ::= TOK_INTEGERLITERAL                                           
+       | TOK_DECIMALLITERAL                                                     
+       | TOK_DOUBLELITERAL                                                      
+                                                                                
+--*[45] ParenthesizedExpr ::= "(" Expr? ")"                                     
+ParenthesizedExpr ::= TOK_LPAREN Expr_opt TOK_RPAREN                            
+Expr_opt ::=  %EMPTY                                                            
+       | Expr                                                                   
+                                                                                
+--*[47] FunctionCall ::=  QName "(" (ExprSingle ("," ExprSingle)*)? ")"         
+FunctionCall ::= QName1 TOK_LPAREN  ExprListOpt  TOK_RPAREN                     
+ExprListOpt ::= %EMPTY                                                          
+              | ExprList                                                        
+ExprList ::= ExprSingle                                                         
+       | ExprList TOK_COMMA ExprSingle                                          
+                                                                                
+--QName ::=  TOK_NCNAME                                                         
+--        | TOK_NCNAME TOK_COLON TOK_NCNAME                                     
+                                                                                
+QName1 ::=  NCName1                                                             
+        | TOK_QNAME                                                             
+                                                                                
+NCName1 ::= TOK_NCNAME                                                          
+	| declare                                                                      
+	| namespace                                                                    
+	| default                                                                      
+	| child                                                                        
+	| descendant                                                                   
+	| self                                                                         
+	| descendant-or-self                                                           
+	| parent                                                                       
+	| or                                                                           
+	| and                                                                          
+	| to                                                                           
+       | div                                                                    
+       | idiv                                                                   
+       | mod                                                                    
+	| union                                                                        
+	| eq                                                                           
+	| ne                                                                           
+	| lt                                                                           
+	| le                                                                           
+	| gt                                                                           
+	| ge                                                                           
+	| is                                                                           
+%End                                                                            

@@ -1,0 +1,12 @@
+Starting parse
+Entering state 0
+Reducing stack 0 by rule 2 (line 77):
+-> $$ = nterm Prolog ()
+Entering state 2
+Reading a token: Next token is token $end ()
+error: syntax error
+Error: popping nterm Prolog ()
+Error: popping token $end ()
+
+
+failed

@@ -1,0 +1,3 @@
+declare default element namespace \"http://ACORD.org/Standards/Life/2\"; " + /TXLife/TXLifeRequest/TransRefGUID
+
+SELECT XMLELEMENT( Name "Customer", XMLQUERY( 'declare default element namespace "http://tpox-benchmark.com/custacc"; $cadoc/Customer/@id' PASSING cadoc AS "cadoc"), XMLQUERY( 'declare default element namespace "http://tpox-benchmark.com/custacc"; $cadoc/Customer/Name' PASSING cadoc AS "cadoc"), XMLQUERY( 'declare default element namespace "http://tpox-benchmark.com/custacc"; $cadoc/Customer/Accounts/Account' PASSING cadoc AS "cadoc")) FROM custacc WHERE XMLEXISTS ( 'declare default element namespace "http://tpox-benchmark.com/custacc"; $cadoc/Customer[@id=1011]' PASSING cadoc AS "cadoc")
